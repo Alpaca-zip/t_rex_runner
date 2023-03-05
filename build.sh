@@ -2,4 +2,4 @@
 cmake -S . -B build
 cmake --build build
 cd ./build/
-mv t_rex_runner.out ../
+mv t_rex_runner ../t_rex_runner.out

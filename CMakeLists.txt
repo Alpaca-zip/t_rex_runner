@@ -14,5 +14,5 @@ find_package(SDL2 REQUIRED)
 ################################################################################
 include_directories(${SDL2_INCLUDE_DIRS})
 
-add_executable(t_rex_runner.out game_node.cpp)
-target_link_libraries(t_rex_runner.out ${SDL2_LIBRARIES})
+add_executable(t_rex_runner game_node.cpp)
+target_link_libraries(t_rex_runner ${SDL2_LIBRARIES})
