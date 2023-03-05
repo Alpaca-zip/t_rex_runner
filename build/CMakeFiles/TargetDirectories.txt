@@ -1,3 +1,0 @@
-/home/mori/src/t_rex_runner/build/CMakeFiles/rebuild_cache.dir
-/home/mori/src/t_rex_runner/build/CMakeFiles/edit_cache.dir
-/home/mori/src/t_rex_runner/build/CMakeFiles/t_rex_runner.out.dir
