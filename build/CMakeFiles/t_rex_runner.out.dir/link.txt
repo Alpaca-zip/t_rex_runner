@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/t_rex_runner.out.dir/game_node.cpp.o  -o t_rex_runner.out  -lSDL2 

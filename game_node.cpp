@@ -1,3 +1,19 @@
+/**
+ * Copyright (C) 2023  Alpaca-zip
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "utility.h"
 
 class GameNode : public ParamServer
@@ -21,7 +37,7 @@ public:
   GameNode()
   {
     initializeSDL();
-    ROS_INFO("T-Rex runner game node initialized.");
+    printf("T-Rex runner game node initialized.\n");
   }
 
   ~GameNode()
@@ -35,8 +51,8 @@ public:
   {
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) != 0)
     {
-      ROS_ERROR("Failed to initialize the SDL2 library.");
-      ROS_ERROR("SDL2 Error: %s", SDL_GetError());
+      printf("Failed to initialize the SDL2 library.\n");
+      printf("SDL2 Error: %s\n", SDL_GetError());
       return;
     }
   }
@@ -51,16 +67,16 @@ public:
     window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_size[0], window_size[1], 0);
     if(!window)
     {
-      ROS_ERROR("Failed to create window.");
-      ROS_ERROR("SDL2 Error: %s", SDL_GetError());
+      printf("Failed to create window.\n");
+      printf("SDL2 Error: %s\n", SDL_GetError());
       return;
     }
 
     window_surface = SDL_GetWindowSurface(window);
     if(!window_surface)
     {
-      ROS_ERROR("Failed to get the surface from the window.");
-      ROS_ERROR("SDL2 Error: %s", SDL_GetError());
+      printf("Failed to get the surface from the window.\n");
+      printf("SDL2 Error: %s\n", SDL_GetError());
       return;
     }
 
@@ -101,12 +117,17 @@ public:
 
   SDL_Surface *loadImage(std::string file_name)
   {
-    std::string full_path = ros::package::getPath("t_rex_runner") + "/imgs/" + file_name;
-    SDL_Surface *image = SDL_LoadBMP(full_path.c_str());
+    std::string s_path = "/imgs/" + file_name;
+    char* path = new char[s_path.size() + 1];
+    char* full_path = get_current_dir_name();
+
+    strcpy(path, s_path.c_str());
+    strcat(full_path, path);
+    SDL_Surface *image = SDL_LoadBMP(full_path);
     if(!image)
     {
-      ROS_ERROR("Failed to load image.");
-      ROS_ERROR("SDL2 Error: %s", SDL_GetError());
+      printf("Failed to load image.\n");
+      printf("SDL2 Error: %s\n", SDL_GetError());
       return 0;
     }
     return image;
@@ -166,12 +187,8 @@ public:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "game_node");
-
   GameNode GN;
   GN.openIntroWindow();
-
-  //ros::spin();
   GN.~GameNode();
   return 0;
 }
