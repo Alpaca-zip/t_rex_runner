@@ -16,9 +16,8 @@
 
 #pragma once
 
-#include <unistd.h>
 #include <string>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 class ParamServer
 {
