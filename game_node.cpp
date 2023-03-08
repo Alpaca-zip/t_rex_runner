@@ -117,13 +117,10 @@ public:
 
   SDL_Surface *loadImage(std::string file_name)
   {
-    std::string s_path = "/imgs/" + file_name;
-    char* path = new char[s_path.size() + 1];
-    char* full_path = get_current_dir_name();
-
-    strcpy(path, s_path.c_str());
-    strcat(full_path, path);
-    SDL_Surface *image = SDL_LoadBMP(full_path);
+    std::string current_path = SDL_GetBasePath();
+    std::string full_path = current_path + "imgs/" + file_name;
+    printf("Load image from: %s\n", full_path.c_str());
+    SDL_Surface *image = SDL_LoadBMP(full_path.c_str());
     if(!image)
     {
       printf("Failed to load image.\n");
