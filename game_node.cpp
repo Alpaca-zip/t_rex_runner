@@ -25,12 +25,18 @@ private:
   int window_size[2] = {width, height};
   int background_color[3] = {235, 235, 235};
 
+  bool keep_window_open = true;
+  bool keyboard_pressed = false;
+
+  int message_balloon_index = 0;
+  int message_balloon_update_counter = 0;
+
   int t_rex_index = 0;
   int t_rex_update_counter = 0;
 
   SDL_Window *window;
   SDL_Surface *window_surface, *message_balloon, *logo, *ground, *t_rex;
-  SDL_Rect ground_clip, t_rex_clip;
+  SDL_Rect message_balloon_clip, ground_clip, t_rex_clip;
 
 public:
 
@@ -80,9 +86,9 @@ public:
       return;
     }
 
-    bool keep_window_open = true;
     while(keep_window_open)
     {
+      keyboard_pressed = false;
       SDL_Event e;
       while(SDL_PollEvent(&e) > 0)
       {
@@ -91,13 +97,18 @@ public:
           case SDL_QUIT:
             keep_window_open = false;
             break;
+
+          case SDL_KEYDOWN:
+            keyboard_pressed = true;
+            break;
         }
       }
 
       SDL_FillRect(window_surface, nullptr, SDL_MapRGB(window_surface->format, background_color[0], background_color[1], background_color[2]));
 
       // message balloon
-      drawImage(message_balloon, window_surface, 106, 45, width/10, height*0.4);
+      message_balloon_clip = updateMessageBalloon(message_balloon);
+      drawSprite(message_balloon, message_balloon_clip, window_surface, 106, 45, width/10, height*0.4);
 
       // ground
       ground_clip = selectSprite(ground, 15, 1, 0, 0);
@@ -164,6 +175,25 @@ public:
     if(size_y != -1) dstrect.h = size_y;
     SDL_BlitScaled(sprite, &sprite_clip, windows_surface, &dstrect);
     SDL_Delay(10);
+  }
+
+  SDL_Rect updateMessageBalloon(SDL_Surface *sprite_sheet_image)
+  {
+    if(message_balloon_index == 0)
+    {
+      if(keyboard_pressed)
+      {
+        printf("Keyboard pressed.\n");
+        message_balloon_index = (message_balloon_index + 1)%2;
+      }
+    }
+    else
+    {
+      if(message_balloon_update_counter % 30 == 29) message_balloon_index = (message_balloon_index + 1)%2;
+    }
+
+    message_balloon_update_counter += 1;
+    return selectSprite(sprite_sheet_image, 2, 1, message_balloon_index, 0);
   }
 
   SDL_Rect updateTrex(SDL_Surface *sprite_sheet_image)
