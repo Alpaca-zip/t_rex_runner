@@ -96,7 +96,7 @@ public:
 
     while(keep_window_open)
     {
-      SDL_Event e;
+      SDL_Event e{};
       updateEventState(e);
 
       SDL_FillRect(window_surface, nullptr, SDL_MapRGB(window_surface->format, background_color[0], background_color[1], background_color[2]));
