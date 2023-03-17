@@ -1,4 +1,4 @@
-# t_rex_runner v0.4.1
+# t_rex_runner v0.4.2
 
 Stay tuned for the development of the ROS-compatible dinosaur game! :ghost:  
 
