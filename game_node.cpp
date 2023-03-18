@@ -26,13 +26,21 @@ private:
   int background_color[3] = {235, 235, 235};
 
   bool keep_window_open = true;
-  bool keyboard_pressed = false;
+  bool is_unknown = false;
+  bool is_jumping = false;
+  bool is_blinking = true;
 
   int message_balloon_index = 0;
   int message_balloon_update_counter = 0;
 
   int t_rex_index = 0;
   int t_rex_update_counter = 0;
+
+  double delta_t = 0.25;
+  double gravity = 9.8;
+  double jumping_time = 0;
+  double jumping_height = 0;
+  double jumping_initial_velocity = 42.0;
 
   SDL_Window *window;
   SDL_Surface *window_surface, *message_balloon, *logo, *ground, *t_rex;
@@ -88,27 +96,13 @@ public:
 
     while(keep_window_open)
     {
-      keyboard_pressed = false;
-      SDL_Event e;
-      while(SDL_PollEvent(&e) > 0)
-      {
-        switch(e.type)
-        {
-          case SDL_QUIT:
-            keep_window_open = false;
-            break;
-
-          case SDL_KEYDOWN:
-            keyboard_pressed = true;
-            break;
-        }
-      }
+      SDL_Event e{};
+      updateEventState(e);
 
       SDL_FillRect(window_surface, nullptr, SDL_MapRGB(window_surface->format, background_color[0], background_color[1], background_color[2]));
 
       // message balloon
-      message_balloon_clip = updateMessageBalloon(message_balloon);
-      drawSprite(message_balloon, message_balloon_clip, window_surface, 106, 45, width/10, height*0.4);
+      updateMessageBalloon(message_balloon);
 
       // ground
       ground_clip = selectSprite(ground, 15, 1, 0, 0);
@@ -118,11 +112,41 @@ public:
       drawImage(logo, window_surface, 282, 30, width*0.33, height*0.5);
 
       // t-rex
-      t_rex_clip = updateTrex(t_rex);
-      drawSprite(t_rex, t_rex_clip, window_surface, 44, 47, width/15, height*0.65);
+      updateTrex(t_rex);
 
       SDL_UpdateWindowSurface(window);
       SDL_FreeSurface(window_surface);
+    }
+  }
+
+  void updateEventState(SDL_Event e)
+  {
+    while(SDL_PollEvent(&e) > 0)
+    {
+      switch(e.type)
+      {
+        case SDL_QUIT:
+          keep_window_open = false;
+          break;
+
+        case SDL_KEYDOWN:
+          if(e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_UP)
+          {
+            is_jumping = true;
+          }
+          else
+          {
+            is_unknown = true;
+          }
+          break;
+        
+        case SDL_KEYUP:
+          if(is_unknown && !(e.key.keysym.sym == SDLK_SPACE || e.key.keysym.sym == SDLK_UP))
+          {
+            is_unknown = false;
+          }
+          break;
+      }
     }
   }
 
@@ -151,7 +175,7 @@ public:
     if(size_x != -1) dstrect.w = size_x;
     if(size_y != -1) dstrect.h = size_y;
     SDL_BlitScaled(image, NULL, windows_surface, &dstrect);
-    SDL_Delay(10);
+    SDL_Delay(5);
   }
 
   SDL_Rect selectSprite(SDL_Surface *sprite_sheet_image, int column, int row, int num_x, int num_y)
@@ -174,41 +198,63 @@ public:
     if(size_x != -1) dstrect.w = size_x;
     if(size_y != -1) dstrect.h = size_y;
     SDL_BlitScaled(sprite, &sprite_clip, windows_surface, &dstrect);
-    SDL_Delay(10);
+    SDL_Delay(5);
   }
 
-  SDL_Rect updateMessageBalloon(SDL_Surface *sprite_sheet_image)
+  void updateMessageBalloon(SDL_Surface *sprite_sheet_image)
   {
-    if(message_balloon_index == 0)
+    if(!is_jumping)
     {
-      if(keyboard_pressed)
+      if(message_balloon_index == 0)
       {
-        printf("Keyboard pressed.\n");
-        message_balloon_index = (message_balloon_index + 1)%2;
+        if(is_unknown)
+        {
+          printf("Unknown key pressed.\n");
+          message_balloon_index = (message_balloon_index + 1)%2;
+        }
+      }
+      else
+      {
+        if(message_balloon_update_counter % 40 == 39) message_balloon_index = (message_balloon_index + 1)%2;
+      }
+
+      message_balloon_update_counter++;
+      message_balloon_clip = selectSprite(sprite_sheet_image, 2, 1, is_unknown ? 1 : message_balloon_index, 0);
+      drawSprite(message_balloon, message_balloon_clip, window_surface, 106, 45, width/10, height*0.4);
+    }
+  }
+
+  void updateTrex(SDL_Surface *sprite_sheet_image)
+  {
+    if(is_jumping)
+    {
+      t_rex_index = 0;
+      jumping_height = (jumping_initial_velocity * jumping_time) - (gravity * jumping_time * jumping_time / 2.0);
+      jumping_time += delta_t;
+
+      if(jumping_height < 0)
+      {
+        jumping_height = 0.0;
+        jumping_time = 0.0;
+        is_jumping = false;
+        printf("T-Rex jumped.\n");
       }
     }
-    else
+    else if(is_blinking)
     {
-      if(message_balloon_update_counter % 30 == 29) message_balloon_index = (message_balloon_index + 1)%2;
+      if(t_rex_index == 0)
+      {
+        if(t_rex_update_counter % 200 == 199) t_rex_index = (t_rex_index + 1)%2;
+      }
+      else
+      {
+        if(t_rex_update_counter % 10 == 9) t_rex_index = (t_rex_index + 1)%2;
+      }
     }
 
-    message_balloon_update_counter += 1;
-    return selectSprite(sprite_sheet_image, 2, 1, message_balloon_index, 0);
-  }
-
-  SDL_Rect updateTrex(SDL_Surface *sprite_sheet_image)
-  {
-    if(t_rex_index == 0)
-    {
-      if(t_rex_update_counter % 150 == 149) t_rex_index = (t_rex_index + 1)%2;
-    }
-    else
-    {
-      if(t_rex_update_counter % 10 == 9) t_rex_index = (t_rex_index + 1)%2;
-    }
-
-    t_rex_update_counter += 1;
-    return selectSprite(sprite_sheet_image, 6, 1, t_rex_index, 0);
+    t_rex_update_counter++;
+    t_rex_clip = selectSprite(sprite_sheet_image, 6, 1, t_rex_index, 0);
+    drawSprite(t_rex, t_rex_clip, window_surface, 44, 47, width/15, height*0.65 - (int)jumping_height);
   }
 };
 
